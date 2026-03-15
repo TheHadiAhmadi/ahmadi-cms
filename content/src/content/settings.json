@@ -1,0 +1,21 @@
+{
+  "site": {
+    "title": "My Blog",
+    "description": "A simple WordPress-like blog",
+    "logo": "",
+    "favicon": ""
+  },
+  "social": {
+    "twitter": "",
+    "facebook": "",
+    "instagram": "",
+    "linkedin": ""
+  },
+  "seo": {
+    "titleSuffix": " | My Blog",
+    "defaultImage": "",
+    "twitterCard": "summary_large_image",
+    "ogImage": ""
+  },
+  "pages": {}
+}

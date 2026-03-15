@@ -1,0 +1,507 @@
+{
+  "settings": {
+    "domain": "momentaj.com",
+    "framework": "astro"
+  },
+  "collections": [
+    {
+      "slug": "services",
+      "label": "Services",
+      "labelSingular": "Service",
+      "description": "IT Consulting, Salesforce, and Development Services",
+      "folder": "services",
+      "create": true,
+      "fields": [
+        {
+          "name": "title",
+          "label": "Service Title",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "slug",
+          "label": "Slug",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "icon",
+          "label": "Service Icon",
+          "type": "image"
+        },
+        {
+          "name": "excerpt",
+          "label": "Short Summary",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "name": "content",
+          "label": "Full Description",
+          "type": "markdown"
+        }
+      ]
+    },
+    {
+      "slug": "solutions",
+      "label": "Products & Solutions",
+      "labelSingular": "Solution",
+      "description": "Custom platforms (e.g., Travel Support, Lendin, IoT Solutions)",
+      "folder": "solutions",
+      "create": true,
+      "fields": [
+        {
+          "name": "name",
+          "label": "Solution Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "slug",
+          "label": "Slug",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "image",
+          "label": "Preview Image",
+          "type": "image"
+        },
+        {
+          "name": "overview",
+          "label": "Overview",
+          "type": "textarea"
+        },
+        {
+          "name": "features",
+          "label": "Key Features",
+          "type": "array",
+          "items": [
+            {
+              "name": "feature",
+              "label": "Feature",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "name": "content",
+          "label": "Detailed Content",
+          "type": "markdown"
+        }
+      ]
+    },
+    {
+      "slug": "case-studies",
+      "label": "Case Studies",
+      "labelSingular": "Case Study",
+      "description": "Client success stories and portfolio projects",
+      "folder": "case-studies",
+      "create": true,
+      "fields": [
+        {
+          "name": "title",
+          "label": "Project Title",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "slug",
+          "label": "Slug",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "client",
+          "label": "Client Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "industry",
+          "label": "Industry",
+          "type": "text"
+        },
+        {
+          "name": "featuredImage",
+          "label": "Featured Image",
+          "type": "image"
+        },
+        {
+          "name": "challenge",
+          "label": "The Challenge",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "name": "solution",
+          "label": "Our Solution",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "name": "results",
+          "label": "Results & Impact",
+          "type": "markdown"
+        },
+        {
+          "name": "technologies",
+          "label": "Technologies Used",
+          "type": "array",
+          "items": [
+            {
+              "name": "tech",
+              "label": "Technology",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "posts",
+      "label": "Blog Posts",
+      "labelSingular": "Post",
+      "description": "Articles, news, and insights",
+      "folder": "posts",
+      "create": true,
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "slug",
+          "label": "Slug",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "published",
+          "label": "Published",
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "name": "date",
+          "label": "Date",
+          "type": "date",
+          "required": true
+        },
+        {
+          "name": "content",
+          "label": "Content",
+          "type": "markdown"
+        },
+        {
+          "name": "image",
+          "label": "Featured Image",
+          "type": "image"
+        }
+      ]
+    }
+  ],
+  "singletons": [
+    {
+      "slug": "menu",
+      "label": "Menu",
+      "description": "Main navigation menu configuration",
+      "fields": [
+        {
+          "name": "items",
+          "label": "Items",
+          "type": "array",
+          "required": true,
+          "items": [
+            {
+              "name": "label",
+              "label": "Label",
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": "url",
+              "label": "URL",
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": "order",
+              "label": "Sort Order",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "settings",
+      "label": "Site Settings",
+      "description": "Global site configuration",
+      "fields": [
+        {
+          "name": "companyName",
+          "label": "Company Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "contactEmail",
+          "label": "Contact Email",
+          "type": "text"
+        },
+        {
+          "name": "contactPhone",
+          "label": "Contact Phone",
+          "type": "text"
+        },
+        {
+          "name": "logo",
+          "label": "Site Logo",
+          "type": "image"
+        },
+        {
+          "name": "socialLinks",
+          "label": "Social Media Links",
+          "type": "array",
+          "items": [
+            {
+              "name": "platform",
+              "label": "Platform",
+              "type": "text"
+            },
+            {
+              "name": "url",
+              "label": "URL",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "slug": "home",
+      "label": "Home Page",
+      "seo": {
+        "title": "Momentaj - High-Quality Software & Salesforce Solutions",
+        "description": "Delivering high-quality Salesforce solutions, Web & Mobile App Development, and IoT technologies that meet our clients' needs.",
+        "image": "/public/files/momentaj-og.jpg"
+      },
+      "sections": [
+        {
+          "name": "hero",
+          "label": "Hero Section",
+          "type": "object",
+          "fields": [
+            {
+              "name": "title",
+              "label": "Headline",
+              "type": "text"
+            },
+            {
+              "name": "subtitle",
+              "label": "Subheadline",
+              "type": "textarea"
+            },
+            {
+              "name": "backgroundImage",
+              "label": "Background Image",
+              "type": "image"
+            },
+            {
+              "name": "primaryButton",
+              "label": "Primary Button Text",
+              "type": "text"
+            },
+            {
+              "name": "primaryUrl",
+              "label": "Primary Button URL",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "name": "servicesHighlight",
+          "label": "Services Highlight Section",
+          "type": "object",
+          "fields": [
+            {
+              "name": "sectionTitle",
+              "label": "Section Title",
+              "type": "text"
+            },
+            {
+              "name": "sectionDescription",
+              "label": "Section Description",
+              "type": "textarea"
+            }
+          ]
+        },
+        {
+          "name": "stats",
+          "label": "Company Stats",
+          "type": "array",
+          "items": [
+            {
+              "name": "number",
+              "label": "Number (e.g. 50+)",
+              "type": "text"
+            },
+            {
+              "name": "label",
+              "label": "Label (e.g. Certified Experts)",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "name": "cta",
+          "label": "Bottom CTA",
+          "type": "object",
+          "fields": [
+            {
+              "name": "heading",
+              "label": "Heading",
+              "type": "text"
+            },
+            {
+              "name": "subtext",
+              "label": "Subtext",
+              "type": "text"
+            },
+            {
+              "name": "buttonText",
+              "label": "Button Text",
+              "type": "text"
+            },
+            {
+              "name": "buttonUrl",
+              "label": "Button Link",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "case-studies",
+      "label": "Case Studies Portfolio",
+      "seo": {
+        "title": "Case Studies - Momentaj",
+        "description": "Explore our portfolio of successful IT, CRM, and web development projects.",
+        "image": "/public/files/case-studies-og.jpg"
+      },
+      "sections": [
+        {
+          "name": "header",
+          "label": "Page Header",
+          "type": "object",
+          "fields": [
+            {
+              "name": "title",
+              "label": "Title",
+              "type": "text"
+            },
+            {
+              "name": "description",
+              "label": "Description",
+              "type": "textarea"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "about",
+      "label": "About Us Page",
+      "seo": {
+        "title": "About Momentaj",
+        "description": "Learn more about Momentaj's mission to deliver cutting-edge IT and CRM solutions.",
+        "image": "/public/files/about-og.jpg"
+      },
+      "sections": [
+        {
+          "name": "intro",
+          "label": "Introduction",
+          "type": "object",
+          "fields": [
+            {
+              "name": "title",
+              "label": "Title",
+              "type": "text"
+            },
+            {
+              "name": "content",
+              "label": "About Content",
+              "type": "markdown"
+            },
+            {
+              "name": "image",
+              "label": "Team or Office Image",
+              "type": "image"
+            }
+          ]
+        },
+        {
+          "name": "values",
+          "label": "Core Values",
+          "type": "array",
+          "items": [
+            {
+              "name": "title",
+              "label": "Value Title",
+              "type": "text"
+            },
+            {
+              "name": "description",
+              "label": "Value Description",
+              "type": "textarea"
+            },
+            {
+              "name": "icon",
+              "label": "Icon",
+              "type": "image"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "contact",
+      "label": "Contact Page",
+      "seo": {
+        "title": "Contact Momentaj",
+        "description": "Get in touch with Momentaj for your custom software and Salesforce needs.",
+        "image": "/public/files/contact-og.jpg"
+      },
+      "sections": [
+        {
+          "name": "contactInfo",
+          "label": "Contact Information",
+          "type": "object",
+          "fields": [
+            {
+              "name": "heading",
+              "label": "Heading",
+              "type": "text"
+            },
+            {
+              "name": "address",
+              "label": "Physical Address",
+              "type": "textarea"
+            },
+            {
+              "name": "embeddedMap",
+              "label": "Google Maps iFrame",
+              "type": "textarea"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -13,11 +13,9 @@
   }
   
   let { 
-    owner, 
     repo,
     groups
   }: {
-    owner: string;
     repo: string;
     groups: NavGroup[];
   } = $props();

@@ -1,0 +1,34 @@
+[
+  {
+    "title": "Smart Fleet Tracking for Global Logistics",
+    "slug": "global-logistics-iot",
+    "client": "Apex Freight",
+    "industry": "Logistics & Supply Chain",
+    "featuredImage": "/public/files/portfolio/fleet-tracking.jpg",
+    "challenge": "Apex Freight struggled with blind spots in their cross-country delivery routes. Their legacy GPS system suffered from severe latency, and they had no visibility into vehicle diagnostics, leading to unexpected breakdowns and delayed shipments.",
+    "solution": "Momentaj designed a custom IoT architecture. We installed edge-computing sensors in the fleet, streaming telemetry and real-time location data to a centralized cloud dashboard. We also integrated this data directly into their existing Salesforce instance for automated dispatching.",
+    "results": "### The Impact\n* **30% Reduction** in unexpected vehicle maintenance costs.\n* **99.9% Uptime** on location tracking.\n* Improved customer satisfaction by providing highly accurate delivery ETAs.",
+    "technologies": [
+      { "tech": "AWS IoT Core" },
+      { "tech": "Salesforce Service Cloud" },
+      { "tech": "React.js" },
+      { "tech": "Python" }
+    ]
+  },
+  {
+    "title": "Enterprise CRM Migration & Customization",
+    "slug": "enterprise-crm-migration",
+    "client": "FinTech Innovators Inc.",
+    "industry": "Financial Services",
+    "featuredImage": "/public/files/portfolio/crm-dashboard.jpg",
+    "challenge": "The client was outgrowing their basic CRM, resulting in siloed data between sales and support teams, and a manual, error-prone reporting process.",
+    "solution": "We executed a full migration to Salesforce Financial Services Cloud. We built custom Lightning Web Components (LWC) to give advisors a unified view of client portfolios and automated their compliance reporting using Flow.",
+    "results": "### The Impact\n* **40% Increase** in advisor productivity.\n* Eliminated manual data entry errors entirely.\n* Enabled real-time pipeline visibility for the executive team.",
+    "technologies": [
+      { "tech": "Salesforce Financial Services Cloud" },
+      { "tech": "Lightning Web Components (LWC)" },
+      { "tech": "Salesforce Flow" },
+      { "tech": "Apex" }
+    ]
+  }
+]

@@ -1,0 +1,28 @@
+[
+  {
+    "name": "Travel Support Platform",
+    "slug": "travel-support",
+    "image": "/public/files/solutions/travel-dashboard.jpg",
+    "overview": "A comprehensive, cloud-based platform designed specifically for travel agencies and tour operators to manage bookings, itineraries, and customer support in one unified interface.",
+    "features": [
+      { "feature": "Automated Itinerary Generation" },
+      { "feature": "Multi-currency Payment Gateway Integration" },
+      { "feature": "24/7 Customer Support Ticketing System" },
+      { "feature": "Real-time Flight and Hotel Availability Sync" }
+    ],
+    "content": "## Streamline Your Travel Operations\n\nThe Travel Support Platform eliminates the need for fragmented spreadsheets and disconnected booking tools. Built with scalability in mind, it empowers agencies to handle peak season volumes effortlessly while providing travelers with a modern, mobile-friendly portal to view their trips."
+  },
+  {
+    "name": "Lendin",
+    "slug": "lendin",
+    "image": "/public/files/solutions/lendin-app.jpg",
+    "overview": "A secure, compliant digital lending platform that accelerates the loan origination process for financial institutions.",
+    "features": [
+      { "feature": "Automated Credit Scoring Integrations" },
+      { "feature": "KYC/AML Compliance Workflows" },
+      { "feature": "Customizable Loan Products" },
+      { "feature": "Borrower Self-Service Portal" }
+    ],
+    "content": "## Modernize the Borrowing Experience\n\nLendin reduces loan processing times from days to hours. By digitizing document collection, e-signatures, and identity verification, financial institutions can offer a frictionless experience that modern consumers expect, all while maintaining strict regulatory compliance."
+  }
+]

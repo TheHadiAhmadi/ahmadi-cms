@@ -1,239 +1,239 @@
 # Ahmadi CMS - Integration Guide
 
-A GitHub-based headless CMS for managing content in your Astro projects.
+A GitHub-based headless CMS for managing content in your projects.
 
 ## Features
 
 | Feature | Description |
 |---------|-------------|
 | **Content Management** | Create, edit, delete markdown/JSON files in your repo |
-| **Folder Support** | Organize content in nested folders |
-| **Image Management** | Upload and manage images in `public/files` |
-| **GitHub-backed** | All changes committed directly to your GitHub repository |
-| **Configurable Paths** | Customize content and media directories |
+| **Image/File Management** | Upload and manage files in `public/files` |
+| **GitHub-backed** | All changes committed directly to a GitHub repository |
+| **Collections** | Define content collections with custom schemas |
+| **Settings/Singletons** | Manage site settings, SEO, and global content |
+| **Pages** | Configure admin-editable pages |
 
 ---
 
 ## Configuration
 
-Create a `cms.config.json` file in your repository root:
+Create a `src/content/config.json` file in your repository:
 
 ```json
 {
+  "filesPath": "public/files",
   "collections": [],
-  "contentPath": "src/content",
-  "imagePath": "public/files"
+  "singletons": [],
+  "pages": [],
+  "seo": {}
 }
 ```
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `contentPath` | `src/content` | Directory for content files |
-| `imagePath` | `public/files` | Directory for uploaded images |
+| `filesPath` | `public/files` | Path to uploaded files (fixed) |
+| `collections` | `[]` | Array of collection definitions |
+| `singletons` | `[]` | Array of singleton/settings definitions |
+| `pages` | `[]` | Array of page configurations |
+| `seo` | `{}` | Default SEO settings |
 
 ---
 
 ## Folder Structure
 
-This CMS expects your Astro project to follow this structure:
+This CMS expects your project to follow this structure:
 
 ```
-your-astro-repo/
-├── cms.config.json
+your-repo/
 ├── src/
 │   └── content/
-│       ├── blog/
-│       │   ├── post-1.md
-│       │   └── post-2.md
-│       └── pages/
-│           └── about.md
+│       ├── config.json          # CMS configuration
+│       ├── settings.json        # Site settings/singletons data
+│       └── collections/         # Collection definitions
+│           ├── posts.json       # Collection schema definition
+│           ├── authors.json
+│           └── books.json
 └── public/
-    └── files/
-        └── image.jpg
+    └── files/                   # Uploaded files
+        └── image.webp
 ```
 
 ---
 
-## Content File Format
+## Collection Definition
 
-### Markdown Files
-
-```markdown
----
-title: My Post
-date: 2024-01-15
-description: A brief description
----
-
-# Hello World
-
-Your content here...
-```
-
-### JSON Files
+Create a JSON file in `src/content/collections/` for each collection:
 
 ```json
 {
-  "title": "Settings",
-  "items": ["item1", "item2"]
-}
-```
-
----
-
-## Astro Integration
-
-### 1. Fetching Content
-
-Use GitHub's raw content API or a build-time fetch:
-
-```typescript
-// src/lib/content.ts
-const GITHUB_OWNER = 'thehadiahmadi-projects';
-const GITHUB_REPO = 'your-repo-name';
-const CONTENT_PATH = 'src/content';
-
-export async function getContentFiles() {
-  const response = await fetch(
-    `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${CONTENT_PATH}`
-  );
-  return response.json();
-}
-
-export async function getFileContent(path: string) {
-  const response = await fetch(
-    `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}`
-  );
-  const data = await response.json();
-  return atob(data.content);
-}
-```
-
-### 2. Using Astro Content Collections
-
-```typescript
-// src/content/config.ts
-import { defineCollection, z } from 'astro:content';
-
-const blog = defineCollection({
-  type: 'content',
-  schema: z.object({
-    title: z.string(),
-    date: z.date(),
-    description: z.string().optional(),
-  }),
-});
-
-export const collections = { blog };
-```
-
-### 3. Listing All Files in a Folder
-
-```typescript
-// Fetch all files recursively from a folder
-async function getFolderContents(path: string): Promise<any[]> {
-  const response = await fetch(
-    `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}`
-  );
-  const items = await response.json();
-  
-  const files: any[] = [];
-  for (const item of items) {
-    if (item.type === 'file') {
-      files.push(item);
-    } else if (item.type === 'dir') {
-      const subFiles = await getFolderContents(item.path);
-      files.push(...subFiles);
+  "slug": "posts",
+  "label": "Posts",
+  "labelSingular": "Post",
+  "description": "Blog posts collection",
+  "folder": "posts",
+  "create": true,
+  "fields": [
+    {
+      "name": "title",
+      "label": "Title",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "slug",
+      "label": "Slug",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "published",
+      "label": "Published",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "name": "date",
+      "label": "Date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "name": "content",
+      "label": "Content",
+      "type": "markdown"
+    },
+    {
+      "name": "image",
+      "label": "Featured Image",
+      "type": "image"
     }
-  }
-  
-  return files;
+  ]
 }
 ```
 
-### 4. Image URLs
+| Field Property | Description |
+|----------------|-------------|
+| `slug` | Unique identifier for the collection |
+| `label` | Display name in the admin UI |
+| `labelSingular` | Singular form for labels |
+| `description` | Collection description |
+| `folder` | Folder name where content files are stored |
+| `create` | Whether to allow creating new entries |
+| `fields` | Array of field definitions |
 
-Uploaded images are accessible at:
+### Field Types
 
-```
-https://raw.githubusercontent.com/{owner}/{repo}/main/public/files/{filename}
-```
-
-Or configure your Astro site to serve from `/files/`.
+| Type | Description |
+|------|-------------|
+| `text` | Single line text input |
+| `textarea` | Multi-line text input |
+| `markdown` | Markdown editor |
+| `boolean` | Toggle switch |
+| `date` | Date picker |
+| `image` | Image upload |
+| `select` | Dropdown selection |
+| `number` | Numeric input |
 
 ---
 
-## API Reference
+## Settings (Singletons)
 
-### CMS Endpoints (when self-hosted)
+The `src/content/settings.json` file stores singleton/settings data:
+
+```json
+{
+  "site": {
+    "title": "My Site",
+    "description": "",
+    "logo": "",
+    "favicon": ""
+  },
+  "social": {
+    "twitter": "",
+    "facebook": "",
+    "instagram": "",
+    "linkedin": ""
+  },
+  "seo": {
+    "titleSuffix": " | My Site",
+    "defaultImage": "",
+    "twitterCard": "summary_large_image",
+    "ogImage": ""
+  },
+  "pages": {}
+}
+```
+
+---
+
+## CMS Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/admin/repos` | GET | List all repositories |
-| `/admin/repo/[owner]/[repo]` | GET | List content & images |
-| `/admin/repo/[owner]/[repo]/edit/[...path]` | GET/POST | Edit file content |
-
-### GitHub API
-
-```typescript
-// Get repository contents
-GET /repos/{owner}/{repo}/contents/{path}
-
-// Create/update file
-PUT /repos/{owner}/{repo}/contents/{path}
-
-// Delete file
-DELETE /repos/{owner}/{repo}/contents/{path}
-```
+| `/admin/repo/[repo]` | GET | List content, collections & files |
+| `/admin/repo/[repo]/collection/[name]` | GET | List collection entries |
+| `/admin/repo/[repo]/edit/[...path]` | GET/POST | Edit file content |
+| `/admin/repo/[repo]/images` | GET | Manage uploaded files |
+| `/admin/repo/[repo]/settings` | GET/POST | Manage site settings |
+| `/admin/repo/[repo]/singleton/[slug]` | GET/POST | Manage singleton content |
 
 ---
 
 ## Environment Variables
 
-If self-hosting the CMS:
+When self-hosting the CMS, configure these variables:
 
 ```env
-GITHUB_CLIENT_ID=your_client_id
-GITHUB_CLIENT_SECRET=your_client_secret
-GITHUB_ORG=thehadiahmadi-projects
-SESSION_SECRET=your_secret
+GITHUB_TOKEN=your_github_personal_access_token
+GITHUB_ORG=your_github_organization
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=your_password
+```
+
+### Getting a GitHub Token
+
+1. Go to GitHub Settings → Developer settings → Personal access tokens
+2. Generate new token (classic) with these scopes:
+   - `repo` (full control)
+3. Copy the token and add it to your `.env` file
+
+---
+
+## Example: Fetching Content
+
+### Fetch Collection Entries
+
+```typescript
+// Fetch all posts from a collection
+const response = await fetch('https://api.github.com/repos/your-org/your-repo/contents/src/content/posts', {
+  headers: {
+    'Authorization': `token ${GITHUB_TOKEN}`
+  }
+});
+const files = await response.json();
+```
+
+### Fetch Settings
+
+```typescript
+// Fetch site settings
+const response = await fetch('https://api.github.com/repos/your-org/your-repo/contents/src/content/settings.json', {
+  headers: {
+    'Authorization': `token ${GITHUB_TOKEN}`
+  }
+});
+const settings = JSON.parse(Buffer.from((await response.json()).content, 'base64').toString());
 ```
 
 ---
 
-## Example: Astro Page for Blog Index
+## Admin UI
 
-```astro
----
-// src/pages/blog/index.astro
-import { getContentFiles, getFileContent } from '$lib/content';
+Once configured, access the CMS admin panel at `/admin`. You'll see:
 
-const files = await getContentFiles();
-const blogFiles = files.filter(f => f.name.endsWith('.md'));
-
-const posts = await Promise.all(
-  blogFiles.map(async (file) => {
-    const content = await getFileContent(file.path);
-    const frontmatter = content.match(/^---\n([\s\S]*?)\n---/);
-    const metadata = frontmatter ? 
-      Object.fromEntries(
-        frontmatter[1].split('\n').map(line => {
-          const [key, ...value] = line.split(':');
-          return [key.trim(), value.join(':').trim()];
-        })
-      ) : {};
-    
-    return { path: file.path, ...metadata };
-  })
-);
----
-
-<h1>Blog</h1>
-<ul>
-  {posts.map(post => (
-    <li>
-      <a href={`/blog/${post.path}`}>{post.title}</a>
-    </li>
-  ))}
-</ul>
-```
+- **Dashboard**: Overview of collections, files, and pages
+- **Collections**: Manage content entries (blog posts, products, etc.)
+- **Files**: Upload and manage images/files in `public/files`
+- **Settings**: Edit site settings, SEO, and social links
+- **Singletons**: Manage custom singleton content types

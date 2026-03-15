@@ -1,0 +1,21 @@
+{
+  "site": {
+    "title": "My Site",
+    "description": "",
+    "logo": "",
+    "favicon": ""
+  },
+  "social": {
+    "twitter": "",
+    "facebook": "",
+    "instagram": "",
+    "linkedin": ""
+  },
+  "seo": {
+    "titleSuffix": " | My Site",
+    "defaultImage": "",
+    "twitterCard": "summary_large_image",
+    "ogImage": ""
+  },
+  "pages": {}
+}

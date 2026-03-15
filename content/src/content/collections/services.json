@@ -1,0 +1,23 @@
+[
+  {
+    "title": "Salesforce Consulting & Implementation",
+    "slug": "salesforce-consulting",
+    "icon": "/public/files/icons/salesforce.png",
+    "excerpt": "Maximize your CRM ROI with tailored Salesforce solutions, from initial implementation to custom AppExchange development.",
+    "content": "## Transform Your Customer Relationships\n\nAt Momentaj, we specialize in end-to-end Salesforce implementations. Whether you are migrating from a legacy system or looking to optimize your current Sales Cloud or Service Cloud instances, our certified experts are here to help.\n\n### Our Capabilities\n* **Sales & Service Cloud Setup:** Streamline your sales pipelines and support ticketing.\n* **Marketing Cloud:** Automate customer journeys and multi-channel campaigns.\n* **Custom Apex & LWC Development:** Build specialized tools tailored to your exact business logic."
+  },
+  {
+    "title": "Web & Mobile App Development",
+    "slug": "web-mobile-development",
+    "icon": "/public/files/icons/mobile-dev.png",
+    "excerpt": "Build scalable, high-performance web and mobile applications using modern frameworks and cloud-native architectures.",
+    "content": "## Build for the Future\n\nWe deliver custom software that scales with your business. From complex web portals to native iOS and Android applications, our development team ensures a flawless user experience and robust backend architecture."
+  },
+  {
+    "title": "IoT & Smart Solutions",
+    "slug": "iot-solutions",
+    "icon": "/public/files/icons/iot-network.png",
+    "excerpt": "Connect your physical assets to the cloud with secure, scalable Internet of Things (IoT) architectures and real-time dashboards.",
+    "content": "## Connect the Physical and Digital Worlds\n\nWe build robust IoT ecosystems that allow businesses to monitor, control, and analyze their hardware in real-time. \n\n### What We Offer\n* **Hardware Integration:** Seamless connection with sensors, beacons, and smart devices.\n* **Real-time Analytics:** Custom dashboards to monitor telemetry data.\n* **Predictive Maintenance:** Utilize machine learning on your IoT data to prevent downtime before it happens."
+  }
+]
