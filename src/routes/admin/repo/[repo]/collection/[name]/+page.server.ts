@@ -3,20 +3,16 @@ import type { PageServerLoad, Actions } from './$types';
 import { fail } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ params }) => {
-  const { repo: repoName } = params;
-  const collectionName = params.name;
+  const { repo: repoName, name: collectionSlug } = params;
 
-  let config: any = { };
-  let collectionDef: any = null;
+  let config: any = { collections: [], contentPath: 'src/content' };
 
-  // Read config.json
   try {
     const { data: configFile } = await octokit.rest.repos.getContent({
       owner: ORG,
       repo: repoName,
-      path: '/src/content/config.json'
+      path: 'src/content/config.json'
     });
-    
     if ('content' in configFile && !Array.isArray(configFile)) {
       config = { ...config, ...JSON.parse(Buffer.from(configFile.content, 'base64').toString()) };
     }
@@ -24,72 +20,160 @@ export const load: PageServerLoad = async ({ params }) => {
     console.log('No src/content/config.json found');
   }
 
-  // Read collection definition from collections folder
-  try {
-    const { data: collectionFile } = await octokit.rest.repos.getContent({
-      owner: ORG,
-      repo: repoName,
-      path: `src/content/collections/${collectionName}.json`
-    });
-    
-    if ('content' in collectionFile && !Array.isArray(collectionFile)) {
-      collectionDef = JSON.parse(Buffer.from(collectionFile.content, 'base64').toString());
-    }
-  } catch (e) {
-    console.log(`No collection definition found for ${collectionName}`);
-  }
-
+  const collectionDef = (config.collections || []).find((c: any) => c.slug === collectionSlug) ?? null;
   const contentPath = config.contentPath || 'src/content';
-  const collectionPath = `${contentPath}/${collectionDef?.folder || collectionName}`;
+  const entriesPath = `${contentPath}/collections/${collectionSlug}.json`;
+
   let entries: any[] = [];
-  
+  let entriesSha: string | null = null;
+
   try {
-    const { data: files } = await octokit.rest.repos.getContent({
+    const { data: entriesFile } = await octokit.rest.repos.getContent({
       owner: ORG,
       repo: repoName,
-      path: collectionPath
+      path: entriesPath
     });
-
-    if (Array.isArray(files)) {
-      entries = files.filter(f => f.type === 'file').map(file => ({
-        name: file.name,
-        path: file.path,
-        sha: file.sha,
-        size: file.size
-      }));
+    if ('content' in entriesFile && !Array.isArray(entriesFile)) {
+      entries = JSON.parse(Buffer.from(entriesFile.content, 'base64').toString());
+      entriesSha = entriesFile.sha;
     }
   } catch (e) {
-    console.error('Error fetching collection:', e);
+    // File doesn't exist yet — empty collection
   }
 
-  return {
-    repo: repoName,
-    collectionName,
-    collectionDef,
-    entries,
-    config
-  };
+  return { repo: repoName, collectionSlug, collectionDef, entries, entriesSha, config };
 };
 
-export const actions: Actions = {
-  deleteFile: async ({ request, params }) => {
-    const data = await request.formData();
-    const path = data.get('path') as string;
-    const sha = data.get('sha') as string;
+async function saveEntries(repoName: string, entriesPath: string, entries: any[], sha: string | null, message: string) {
+  const content = Buffer.from(JSON.stringify(entries, null, 2)).toString('base64');
+  await octokit.rest.repos.createOrUpdateFileContents({
+    owner: ORG,
+    repo: repoName,
+    path: entriesPath,
+    message,
+    content,
+    ...(sha ? { sha } : {})
+  });
+}
 
-    if (!path || !sha) return fail(400, { message: 'Path and SHA are required' });
+export const actions: Actions = {
+  createEntry: async ({ request, params }) => {
+    const { repo: repoName, name: collectionSlug } = params;
+    const data = await request.formData();
+    const entryJson = data.get('entry') as string;
+
+    if (!entryJson) return fail(400, { message: 'Entry data is required' });
+
+    let config: any = { contentPath: 'src/content' };
+    try {
+      const { data: configFile } = await octokit.rest.repos.getContent({
+        owner: ORG, repo: repoName, path: 'src/content/config.json'
+      });
+      if ('content' in configFile && !Array.isArray(configFile)) {
+        config = { ...config, ...JSON.parse(Buffer.from(configFile.content, 'base64').toString()) };
+      }
+    } catch {}
+
+    const entriesPath = `${config.contentPath || 'src/content'}/collections/${collectionSlug}.json`;
+    let entries: any[] = [];
+    let sha: string | null = null;
 
     try {
-      await octokit.rest.repos.deleteFile({
-        owner: ORG,
-        repo: params.repo,
-        path,
-        message: `Delete ${path} via CMS`,
-        sha
-      });
+      const { data: f } = await octokit.rest.repos.getContent({ owner: ORG, repo: repoName, path: entriesPath });
+      if ('content' in f && !Array.isArray(f)) {
+        entries = JSON.parse(Buffer.from(f.content, 'base64').toString());
+        sha = f.sha;
+      }
+    } catch {}
+
+    entries.push(JSON.parse(entryJson));
+
+    try {
+      await saveEntries(repoName, entriesPath, entries, sha, `Add entry to ${collectionSlug} via CMS`);
       return { success: true };
     } catch (e) {
-      return fail(500, { message: 'Failed to delete file' });
+      return fail(500, { message: 'Failed to create entry' });
+    }
+  },
+
+  saveEntry: async ({ request, params }) => {
+    const { repo: repoName, name: collectionSlug } = params;
+    const data = await request.formData();
+    const index = Number(data.get('index'));
+    const entryJson = data.get('entry') as string;
+
+    if (isNaN(index) || !entryJson) return fail(400, { message: 'Index and entry data are required' });
+
+    let config: any = { contentPath: 'src/content' };
+    try {
+      const { data: configFile } = await octokit.rest.repos.getContent({
+        owner: ORG, repo: repoName, path: 'src/content/config.json'
+      });
+      if ('content' in configFile && !Array.isArray(configFile)) {
+        config = { ...config, ...JSON.parse(Buffer.from(configFile.content, 'base64').toString()) };
+      }
+    } catch {}
+
+    const entriesPath = `${config.contentPath || 'src/content'}/collections/${collectionSlug}.json`;
+    let entries: any[] = [];
+    let sha: string | null = null;
+
+    try {
+      const { data: f } = await octokit.rest.repos.getContent({ owner: ORG, repo: repoName, path: entriesPath });
+      if ('content' in f && !Array.isArray(f)) {
+        entries = JSON.parse(Buffer.from(f.content, 'base64').toString());
+        sha = f.sha;
+      }
+    } catch {}
+
+    if (index < 0 || index >= entries.length) return fail(400, { message: 'Invalid entry index' });
+    entries[index] = JSON.parse(entryJson);
+
+    try {
+      await saveEntries(repoName, entriesPath, entries, sha, `Update entry in ${collectionSlug} via CMS`);
+      return { success: true };
+    } catch (e) {
+      return fail(500, { message: 'Failed to save entry' });
+    }
+  },
+
+  deleteEntry: async ({ request, params }) => {
+    const { repo: repoName, name: collectionSlug } = params;
+    const data = await request.formData();
+    const index = Number(data.get('index'));
+
+    if (isNaN(index)) return fail(400, { message: 'Entry index is required' });
+
+    let config: any = { contentPath: 'src/content' };
+    try {
+      const { data: configFile } = await octokit.rest.repos.getContent({
+        owner: ORG, repo: repoName, path: 'src/content/config.json'
+      });
+      if ('content' in configFile && !Array.isArray(configFile)) {
+        config = { ...config, ...JSON.parse(Buffer.from(configFile.content, 'base64').toString()) };
+      }
+    } catch {}
+
+    const entriesPath = `${config.contentPath || 'src/content'}/collections/${collectionSlug}.json`;
+    let entries: any[] = [];
+    let sha: string | null = null;
+
+    try {
+      const { data: f } = await octokit.rest.repos.getContent({ owner: ORG, repo: repoName, path: entriesPath });
+      if ('content' in f && !Array.isArray(f)) {
+        entries = JSON.parse(Buffer.from(f.content, 'base64').toString());
+        sha = f.sha;
+      }
+    } catch {}
+
+    if (index < 0 || index >= entries.length) return fail(400, { message: 'Invalid entry index' });
+    entries.splice(index, 1);
+
+    try {
+      await saveEntries(repoName, entriesPath, entries, sha, `Delete entry from ${collectionSlug} via CMS`);
+      return { success: true };
+    } catch (e) {
+      return fail(500, { message: 'Failed to delete entry' });
     }
   }
 };

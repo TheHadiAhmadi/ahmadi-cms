@@ -1,6 +1,22 @@
 {
   "filesPath": "public/files",
-  "collections": [],
+  "collections": [
+    {
+      "slug": "posts",
+      "label": "Posts",
+      "labelSingular": "Post",
+      "description": "Blog posts collection",
+      "create": true,
+      "fields": [
+        { "name": "title", "label": "Title", "type": "text", "required": true },
+        { "name": "slug", "label": "Slug", "type": "text", "required": true },
+        { "name": "published", "label": "Published", "type": "boolean", "default": false },
+        { "name": "date", "label": "Date", "type": "date", "required": true },
+        { "name": "content", "label": "Content", "type": "markdown" },
+        { "name": "image", "label": "Featured Image", "type": "image" }
+      ]
+    }
+  ],
   "singletons": [],
   "pages": [],
   "seo": {}

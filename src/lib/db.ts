@@ -33,12 +33,13 @@ export interface PendingChange {
   id: string;
   repo: string;
   path: string;
-  type: 'edit' | 'upload' | 'delete';
+  type: 'edit' | 'upload' | 'delete' | 'collection' | 'page' | 'setting';
   content?: string;
   sha?: string;
   fileName?: string;
   mimeType?: string;
   message?: string;
+  collectionSlug?: string;
   updatedAt: number;
 }
 

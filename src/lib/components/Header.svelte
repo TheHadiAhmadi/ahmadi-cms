@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import { LogOut, Globe, ChevronLeft } from 'lucide-svelte';
   import { page } from '$app/stores';
   import ThemeToggle from './ThemeToggle.svelte';
@@ -7,12 +8,14 @@
     title = 'CMS',
     showBack = false,
     backHref = '/admin/repos',
-    showActions = true
+    showActions = true,
+    children
   }: {
     title?: string;
     showBack?: boolean;
     backHref?: string;
     showActions?: boolean;
+    children?: Snippet;
   } = $props();
   
   const isRoot = $derived($page.url.pathname === '/admin/repos');
@@ -42,6 +45,9 @@
     
     {#if showActions}
       <div class="flex items-center gap-1">
+        {#if children}
+          {@render children()}
+        {/if}
         <a 
           href="/admin/repos"
           class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium text-[--muted-foreground] transition-all hover:bg-secondary hover:text-foreground"

@@ -5,6 +5,7 @@ export const load: PageServerLoad = async ({ params }) => {
   const repoName = params.repo;
   let config: any = { contentPath: 'src/content', filesPath: 'public/files', pages: [], seo: {} };
   let settings: any = {};
+  let settingsSha: string | null = null;
 
   // Read config.json
   try {
@@ -29,8 +30,9 @@ export const load: PageServerLoad = async ({ params }) => {
     });
     if ('content' in settingsFile && !Array.isArray(settingsFile)) {
       settings = JSON.parse(Buffer.from(settingsFile.content, 'base64').toString());
+      settingsSha = settingsFile.sha;
     }
   } catch (e) { console.log('No src/content/settings.json found'); }
 
-  return { repo: repoName, config, settings };
+  return { repo: repoName, config, settings, settingsSha };
 };

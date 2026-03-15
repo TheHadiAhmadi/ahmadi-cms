@@ -3,6 +3,7 @@
   import Button from '$lib/components/Button.svelte';
   import Input from '$lib/components/Input.svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
+  import PendingChanges from '$lib/components/PendingChanges.svelte';
   import { 
     FolderOpen, 
     FileText, 
@@ -14,15 +15,26 @@
     File,
     X,
     Settings,
-    Layers
+    Layers,
+    Loader2,
+    Edit,
+    Trash2
   } from 'lucide-svelte';
   import { enhance } from '$app/forms';
   import { toast } from '$lib/stores/toast';
+  import { savePages, publishChanges } from '$lib/client/localSave';
+  import { pendingChanges } from '$lib/stores/pending';
+  import { onMount } from 'svelte';
   
   let { data, form } = $props();
   
   let searchQuery = $state('');
   let showCreateModal = $state(false);
+  let showPagesModal = $state(false);
+  let pagesData = $state<any[]>(data.pages || []);
+  let pagesSha = $state<string | null>(data.pagesSha || null);
+  let saving = $state(false);
+  let publishing = $state(false);
   
   let newFileName = $state('');
   let newFileType = $state<'file' | 'folder'>('file');
@@ -31,10 +43,10 @@
     {
       title: 'Content',
       items: [
-        ...(data.collections || []).map((c: any) => ({ 
-          label: c.name, 
-          href: `/admin/repo/${data.repo}/collection/${c.name}`, 
-          icon: Layers 
+        ...(data.collections || []).map((c: any) => ({
+          label: c.label || c.slug,
+          href: `/admin/repo/${data.repo}/collection/${c.slug}`,
+          icon: Layers
         }))
       ]
     },
@@ -65,8 +77,8 @@
   );
   
   const filteredCollections = $derived(
-    (data.collections || []).filter((item: any) => 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    (data.collections || []).filter((item: any) =>
+      (item.label || item.slug).toLowerCase().includes(searchQuery.toLowerCase())
     )
   );
   
@@ -102,9 +114,41 @@
       toast(form.message, 'error');
     }
   });
+
+  onMount(() => {
+    pendingChanges.load(data.repo);
+  });
+
+  async function savePagesConfig() {
+    saving = true;
+    const result = await savePages(data.repo, pagesData, pagesSha || undefined);
+    saving = false;
+    
+    if (result.success) {
+      toast('Pages saved locally', 'success');
+      pendingChanges.refresh(data.repo);
+    } else {
+      toast(result.error || 'Failed to save', 'error');
+    }
+  }
+
+  async function handlePublish() {
+    publishing = true;
+    const result = await publishChanges(data.repo);
+    publishing = false;
+    
+    if (result.success) {
+      toast('Published successfully!', 'success');
+      pendingChanges.refresh(data.repo);
+    } else {
+      toast(result.error || 'Failed to publish', 'error');
+    }
+  }
 </script>
 
-<Header title={data.repo} showBack={true} backHref="/admin/repos" />
+<Header title={data.repo} showBack={true} backHref="/admin/repos">
+  <PendingChanges repo={data.repo} />
+</Header>
 
 <div class="flex min-h-[calc(100vh-3.5rem)]">
   <Sidebar repo={data.repo} groups={navGroups} />
@@ -115,9 +159,14 @@
         <h2 class="text-lg font-semibold tracking-tight">Collections</h2>
         <p class="mt-0.5 text-[13px] text-[--muted-foreground]">Manage your content</p>
       </div>
-      <Button size="sm" onclick={() => showCreateModal = true}>
-        <Plus class="h-3.5 w-3.5" /> New
-      </Button>
+      <div class="flex gap-2">
+        <Button variant="secondary" size="sm" onclick={() => { pagesData = data.pages || []; showPagesModal = true; }}>
+          <FileText class="h-3.5 w-3.5" /> Pages
+        </Button>
+        <Button size="sm" onclick={() => showCreateModal = true}>
+          <Plus class="h-3.5 w-3.5" /> New
+        </Button>
+      </div>
     </div>
     
     <div class="mb-4 max-w-xs">
@@ -129,11 +178,11 @@
         <h3 class="mb-3 text-[13px] font-medium text-[--muted-foreground]">Collections</h3>
         <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
           {#each filteredCollections as coll}
-            <a href="/admin/repo/{data.repo}/collection/{coll.name}" class="flex items-center gap-2 rounded-lg border border-border/50 bg-card p-3 transition-colors hover:bg-secondary/50">
+            <a href="/admin/repo/{data.repo}/collection/{coll.slug}" class="flex items-center gap-2 rounded-lg border border-border/50 bg-card p-3 transition-colors hover:bg-secondary/50">
               <div class="flex h-8 w-8 items-center justify-center rounded-md bg-amber-500/10 text-amber-600">
                 <FolderOpen class="h-4 w-4" />
               </div>
-              <span class="text-[13px] font-medium">{coll.name}</span>
+              <span class="text-[13px] font-medium">{coll.label || coll.slug}</span>
             </a>
           {/each}
         </div>
@@ -208,6 +257,65 @@
           <Button class="flex-1 h-8">Create</Button>
         </div>
       </form>
+    </div>
+  </div>
+{/if}
+
+{#if showPagesModal}
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+    <div class="surface w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto scale-in">
+      <div class="flex items-center justify-between p-4 border-b border-border/30">
+        <h3 class="text-[15px] font-semibold">Pages Configuration</h3>
+        <button onclick={() => showPagesModal = false} class="flex h-7 w-7 items-center justify-center rounded-md text-[--muted-foreground] hover:bg-secondary">
+          <X class="h-3.5 w-3.5" />
+        </button>
+      </div>
+      
+      <div class="p-4 space-y-4">
+        <p class="text-[13px] text-[--muted-foreground]">Configure which pages are available in your site.</p>
+        
+        <div class="space-y-2">
+          {#each pagesData as page, index}
+            <div class="flex items-center gap-2 p-3 rounded-lg border border-border/50 bg-secondary/20">
+              <input 
+                type="text" 
+                bind:value={page.label}
+                placeholder="Label"
+                class="flex-1 h-8 rounded-md border border-border/60 bg-transparent px-2 text-[13px]"
+              />
+              <input 
+                type="text" 
+                bind:value={page.slug}
+                placeholder="Slug"
+                class="flex-1 h-8 rounded-md border border-border/60 bg-transparent px-2 text-[13px]"
+              />
+              <button 
+                onclick={() => pagesData = pagesData.filter((_, i) => i !== index)}
+                class="p-1.5 rounded-md text-red-500 hover:bg-red-50"
+              >
+                <Trash2 class="h-3.5 w-3.5" />
+              </button>
+            </div>
+          {/each}
+        </div>
+        
+        <button 
+          onclick={() => pagesData = [...pagesData, { slug: '', label: '', path: '', seo: {}, sections: [] }]}
+          class="flex items-center gap-1.5 text-[13px] text-primary hover:opacity-80"
+        >
+          <Plus class="h-3.5 w-3.5" /> Add Page
+        </button>
+        
+        <div class="flex gap-2 pt-2 border-t border-border/30">
+          <Button variant="secondary" class="flex-1 h-9" onclick={() => showPagesModal = false}>Cancel</Button>
+          <Button class="flex-1 h-9" onclick={savePagesConfig} disabled={saving}>
+            {#if saving}
+              <Loader2 class="h-3.5 w-3.5 animate-spin" />
+            {/if}
+            Save Locally
+          </Button>
+        </div>
+      </div>
     </div>
   </div>
 {/if}

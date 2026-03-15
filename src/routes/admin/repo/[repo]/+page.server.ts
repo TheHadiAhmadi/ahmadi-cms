@@ -32,38 +32,8 @@ export const load: PageServerLoad = async ({ params }) => {
   const contentPath = config.contentPath || 'src/content';
   const filesPath = config.filesPath || 'public/files';
 
-  // Read collection definitions from collections/ folder
-  let collectionDefs: any[] = [];
-  try {
-    const { data: collectionFiles } = await octokit.rest.repos.getContent({
-      owner: ORG,
-      repo: repoName,
-      path: `${contentPath}/collections`
-    });
-
-    if (Array.isArray(collectionFiles)) {
-      const jsonFiles = collectionFiles.filter(f => f.type === 'file' && f.name.endsWith('.json'));
-      
-      for (const file of jsonFiles) {
-        try {
-          const { data: fileContent } = await octokit.rest.repos.getContent({
-            owner: ORG,
-            repo: repoName,
-            path: file.path
-          });
-          
-          if ('content' in fileContent && !Array.isArray(fileContent)) {
-            const def = JSON.parse(Buffer.from(fileContent.content, 'base64').toString());
-            collectionDefs.push(def);
-          }
-        } catch (err) {
-          console.error(`Error reading collection definition ${file.path}:`, err);
-        }
-      }
-    }
-  } catch (e) {
-    console.log('No src/content/collections folder found');
-  }
+  // Collection definitions come directly from config.json
+  const collectionDefs: any[] = config.collections || [];
 
   // Read settings from settings.json
   let settings: any = {};
@@ -81,12 +51,9 @@ export const load: PageServerLoad = async ({ params }) => {
     console.log('No src/content/settings.json found');
   }
 
-  // Get collection folders from definitions
-  const collectionFolders = collectionDefs.map(c => c.folder || c.slug);
+  const collections = collectionDefs;
 
   let contents: any[] = [];
-  let collections: any[] = [];
-  
   try {
     const { data: contentFiles } = await octokit.rest.repos.getContent({
       owner: ORG,
@@ -95,10 +62,6 @@ export const load: PageServerLoad = async ({ params }) => {
     });
 
     if (Array.isArray(contentFiles)) {
-      // Filter to only include folders that are defined in collection definitions
-      collections = contentFiles.filter(f => 
-        f.type === 'dir' && collectionFolders.includes(f.name)
-      );
       contents = contentFiles.map(file => ({
         name: file.name,
         path: file.path,
@@ -133,8 +96,23 @@ export const load: PageServerLoad = async ({ params }) => {
     console.error('Error fetching images:', e);
   }
 
-  // Pages are now defined in config.pages
-  const pages = config.pages || [];
+  // Pages are now defined in pages.json (client-editable)
+  let pages: any[] = [];
+  let pagesSha: string | null = null;
+  try {
+    const { data: pagesFile } = await octokit.rest.repos.getContent({
+      owner: ORG,
+      repo: repoName,
+      path: `${contentPath}/pages.json`
+    });
+    
+    if ('content' in pagesFile && !Array.isArray(pagesFile)) {
+      pages = JSON.parse(Buffer.from(pagesFile.content, 'base64').toString());
+      pagesSha = pagesFile.sha;
+    }
+  } catch (e) {
+    console.log('No src/content/pages.json found');
+  }
 
   return {
     repo: repoName,
@@ -145,12 +123,51 @@ export const load: PageServerLoad = async ({ params }) => {
     contents,
     files,
     pages,
+    pagesSha,
     currentPath: contentPath,
     filesPath
   };
 };
 
 export const actions: Actions = {
+  savePages: async ({ request, params }) => {
+    const { repo: repoName } = params;
+    const data = await request.formData();
+    const pagesJson = data.get('pages') as string;
+    const sha = data.get('sha') as string;
+
+    if (!pagesJson) return fail(400, { message: 'Pages data is required' });
+
+    let config: any = { contentPath: 'src/content' };
+    try {
+      const { data: configFile } = await octokit.rest.repos.getContent({
+        owner: ORG, repo: repoName, path: 'src/content/config.json'
+      });
+      if ('content' in configFile && !Array.isArray(configFile)) {
+        config = { ...config, ...JSON.parse(Buffer.from(configFile.content, 'base64').toString()) };
+      }
+    } catch {}
+
+    const contentPath = config.contentPath || 'src/content';
+    const pagesPath = `${contentPath}/pages.json`;
+
+    try {
+      const content = Buffer.from(pagesJson).toString('base64');
+      await octokit.rest.repos.createOrUpdateFileContents({
+        owner: ORG,
+        repo: repoName,
+        path: pagesPath,
+        message: 'Update pages configuration via CMS',
+        content,
+        ...(sha ? { sha } : {})
+      });
+      return { success: true };
+    } catch (e) {
+      console.error('Error saving pages:', e);
+      return fail(500, { message: 'Failed to save pages' });
+    }
+  },
+
   createFile: async ({ request, params }) => {
     const { repo: repoName } = params;
     const data = await request.formData();
